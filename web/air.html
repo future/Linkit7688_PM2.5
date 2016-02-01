@@ -1,0 +1,239 @@
+<!doctype html>
+<html>
+
+<head>
+<meta charset="utf-8">
+
+<link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,700' rel='stylesheet' type='text/css'>
+<script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
+<script type="text/javascript" src="./mqttws31.js"></script>
+
+<script type="text/javascript">
+
+function select_color(val)
+{
+	if(val<=11)
+		return '#9cff9c';
+	if(val >=12 && val <=23)
+		return '#31ff00';
+	if(val >=24 && val <=35)
+		return '#31cf00';
+	if(val >=36 && val<=41)
+		return '#ffff00';
+	if(val >=42 && val <=47)
+		return '#ffcf00';
+	if(val >=48 && val <=53)
+		return '#ff9a00';
+	if(val >=54 && val <=58)
+		return '#ff6464';
+	if(val >=59 && val <=64)
+		return '#ff0000';
+	if(val >=65 && val <=70)
+		return '#990000';
+	if(val >=71)
+		return '#ce30ff';
+
+}
+
+
+$(document).ready(function(){
+var devid = "sparkdev"+Math.random();
+var broker = "MQTT.broker.server"
+var port = 8080
+var topic = "YOUR/TOPIC"
+
+client = new Paho.MQTT.Client(broker, Number(port), devid);
+client.onConnectionLost = onConnectionLost;
+client.onMessageArrived = onMessageArrived;
+client.connect({onSuccess:onConnect});
+
+function onMessageArrived(message) {
+	var payload = message.payloadString
+
+	var pm1_0 = /PM1\.0=(\d*)/.exec(payload)[1];
+	var pm2_5 = /PM2\.5=(\d*)/.exec(payload)[1];
+	var pm10 = /PM10=(\d*)/.exec(payload)[1];
+	var tmp = /Tmp=([0-9.]*)/.exec(payload)[1];
+	var rh = /RH=(\d*)/.exec(payload)[1];
+
+	var pm25_color = select_color(Number(pm2_5));
+	var pm1_color = select_color(Number(pm1_0));
+	var pm10_color = select_color(Number(pm10));
+
+	$('#msg').text('每 10 秒更新一次數據');
+	
+	$('#pm2_5_block').css('border-color', pm25_color);
+	$('#pm2_5_block').css('background-color', pm25_color);
+
+
+	$('#pm2_5_data').text(pm2_5);
+	$('#pm1_0_data').text(pm1_0);
+	$('#pm10_data').text(pm10);
+	
+	$('#tmp_data').text(tmp);
+	$('#rh_data').text(rh + " %");
+
+	document.title = 'PM 2.5: ' + pm2_5;
+
+}
+
+function onConnect() {
+	client.subscribe(topic);
+	$('#msg').text("已連上伺服器！");
+}
+
+function onConnectionLost(responseObject) {
+	if (responseObject.errorCode !== 0) {
+	}
+}
+
+
+});
+
+</script>
+
+<style>
+	body{
+		color: #ffffff;
+		font-family: 'Open Sans', sans-serif; 
+		
+		background-color:#8088ff; 
+		margin: 0 auto;
+		max-width: 800px;
+		text-shadow:2px 3px #434a54;
+	}
+	
+	.data_block {	
+		color: #ffffff;
+		background-color: #8088ff;
+		border-color: #8088ff;
+		border-style: solid;
+		border-width: 10px;
+		border-radius: 20px;
+
+		box-shadow: 5px 13px 15px #ffffff;
+	}
+	
+	table{
+		width: 100%;	
+	}
+	
+	.pmhead{
+		font-size: 30px;
+	}
+	
+	.pmval{
+		font-size: 100px; 
+	}
+	
+	.tmphead{
+		font-size: 30px; 
+	}
+	
+	.tmpval{
+		font-size: 100px; 
+	}
+	
+	td{
+		text-align:center; 
+	}
+	
+	#pm2_5_text{
+		font-size: 50px; 
+		border-width: 70%;
+		text-shadow:3px 3px #434a54;
+	}
+	#pm2_5_data{
+		font-size: 110px; 
+		text-shadow:2px 2px #434a54;
+	}
+
+	
+</style>
+</head>
+
+<body>
+	<center>
+		<h1>Spark  空氣品質即時數據</h1>
+		<hr>
+		
+		<p>
+		<table  id="pm_table" cellspacing="15px">
+			<tr >
+				<td>
+					<table class="data_block" id="pm1_0_block">
+					<tr>
+						<td class="pmhead" id="pm1_0_text">PM 1.0</td>
+					</tr>
+					<tr>
+						<td class="pmval" id="pm1_0_data">0</td> 
+					</tr>
+					</table>
+				</td>
+				
+				<td>
+					<table class="data_block" id="pm2_5_block">
+					<tr>
+						<td class="pmhead" id="pm2_5_text">PM 2.5</td>
+					</tr>
+					<tr>
+						<td class="pmval" id="pm2_5_data">0</td> 
+					</tr>
+					</table>
+				</td>
+	
+				<td>
+					<table class="data_block" id="pm10_block">
+					<tr>
+						<td class="pmhead" id="pm10_text">PM  10</td>
+					</tr>
+					<tr>
+						<td class="pmval" id="pm10_data">0</td> 
+					</tr>
+					</table>
+				</td>
+				
+			</tr>
+		</table>
+		</p>
+		<p></p>
+		<p>
+		<table  id="T_RH_table"  cellspacing="15px">
+			<tr >
+				<td width="50%">
+					<table class="data_block" id="tmp_block">
+					<tr>
+						<td class="tmphead" id="tmp_text">溫度</td>
+					</tr>
+					<tr>
+						<td class="tmpval" id="tmp_data">0</td> 
+					</tr>
+					</table>
+				</td>
+				
+				<td>
+					<table class="data_block" id="rh_block">
+					<tr>
+						<td class="tmphead" id="rh_text">濕度</td>
+					</tr>
+					<tr>
+						<td class="tmpval" id="rh_data">0</td> 
+					</tr>
+					</table>
+				</td>
+				
+			</tr>		
+		
+		</table>
+		</p>
+		
+		<p></p>
+<hr>
+<div id='msg'>連接伺服器中...</div>
+<hr>
+</center>
+
+</body>
+
+
+</html>
