@@ -48,5 +48,6 @@
 
 # 範例
 
+[即時數據網頁](iot.sparkfuture.io/static/air.html)
 [影片](https://www.youtube.com/watch?v=wfXE5XBoCEo)  
 
